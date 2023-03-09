@@ -1,26 +1,26 @@
 [
     {
-    "questionText": "In what year did the Battle of Marignan take place?",
-    "answers": 
-    [
-    {
-        "content": "1313",
-        "points": 0
+        "questionText": "In what year did the Battle of Marignan take place?",
+        "answers": 
+        [
+            {
+                "content": "1313",
+                "points": 0
+            },
+            {
+                "content": "1414",
+                "points": 0
+            },
+            {
+                "content": "1515",
+                "points": 1
+            },
+            {
+                "content": "1616",
+                "points": 0
+            }
+        ]
     },
-    {
-        "content": "1414",
-        "points": 0
-    },
-    {
-        "content": "1515",
-        "points": 1
-    },
-    {
-        "content": "1616",
-        "points": 0
-    }
-]
-},
 {
     "questionText": "In what year did the Battle of Waterloo take place?",
     "answers": 
