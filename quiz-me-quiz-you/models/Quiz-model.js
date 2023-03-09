@@ -14,10 +14,13 @@ const quizSchema = new Schema(
             required: true
         },
         description: {
-            type: String,
-            required: true
+            type: String
         },
-        questions: [ObjectId],
+        questions: [
+            type: Schema.Types.ObjectId,
+            ref: 'Question',
+            required: true,
+        ],
     },
     {
         // this second object adds extra properties: `createdAt` and `updatedAt`    
