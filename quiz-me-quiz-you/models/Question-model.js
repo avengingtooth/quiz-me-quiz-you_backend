@@ -7,10 +7,12 @@ const questionSchema = new Schema(
             type: String,
             required: true
         },
-        score: {
-            type: Number,
-            required: true
-        },
+        answers: [
+            {
+                content: String,
+                points: Number
+            }
+        ],
     },
     {
         // this second object adds extra properties: `createdAt` and `updatedAt`    
