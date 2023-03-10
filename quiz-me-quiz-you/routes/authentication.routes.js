@@ -1,8 +1,8 @@
 const express = require("express")
 const router = require("express").Router();
+const jwt = require("jsonwebtoken");
 
 const bcrypt = require("bcrypt");
-const mongoose = require("mongoose");
 
 const User = require("../models/User.model");
 
@@ -14,10 +14,10 @@ router.get("/login", isLoggedOut, (req, res) => {
     res.json("login");
 });
 router.post("/login", (req, res, next) => {
-    const { username, email, password } = req.body;
+    const { username, password } = req.body;
 
     // Check that username, email, and password are provided
-    if (username === "" || email === "" || password === "") {
+    if (username === "" || password === "") {
         res.status(400).json("login", {
             errorMessage:
                 "All fields are mandatory. Please provide username, email and password.",
@@ -34,37 +34,41 @@ router.post("/login", (req, res, next) => {
     }
 
     // Search the database for a user with the email submitted in the form
-    User.findOne({ email })
+    User.findOne({ username })
         .then((user) => {
             // If the user isn't found, send an error message that user provided wrong credentials
             if (!user) {
                 res
                     .status(400)
-                    .json("login", { errorMessage: "Wrong credentials." });
+                    .json("login", { errorMessage: "User not found." });
                 return;
             }
 
-            // If user is found based on the username, check if the in putted password matches the one saved in the database
-            bcrypt
-                .compare(password, user.password)
-                .then((isSamePassword) => {
-                    if (!isSamePassword) {
-                        res
-                            .status(400)
-                            .json("login", { errorMessage: "Wrong credentials." });
-                        return;
-                    }
+            const passwordCorrect = bcrypt.compareSync(password, user.password);
 
-                    // Add the user object to the session object
-                    req.session.currentUser = user.toObject();
-                    // Remove the password field
-                    delete req.session.currentUser.password;
+            if (passwordCorrect) {
+                // Deconstruct the user object to omit the password
+                const { _id, username } = foundUser;
 
-                    res.redirect("/quiz/all");
-                })
-                .catch((err) => next(err)); // In this case, we send error handling to the error handling middleware.
+                // Create an object that will be set as the token payload
+                const payload = { _id, username };
+
+                // Create and sign the token
+                const authToken = jwt.sign(
+                    payload,
+                    process.env.TOKEN_SECRET,
+                    { algorithm: 'HS256', expiresIn: "6h" }
+                );
+
+                // Send the token as the response
+                res.status(200).json({ authToken: authToken });
+            }
+            else {
+                res.status(401).json({ message: "Unable to authenticate the user" });
+            }
+
         })
-        .catch((err) => next(err));
+        .catch(err => res.status(500).json({ message: "Internal Server Error" }));
 });
 
 
@@ -73,10 +77,10 @@ router.get("/signup", isLoggedOut, (req, res) => {
     res.json("signup");
 });
 router.post("/signup", isLoggedOut, (req, res, next) => {
-    const { username, email, password } = req.body;
+    const { username, confirmPassword, password } = req.body;
 
     // Check that username, email, and password are provided
-    if (username === "" || email === "" || password === "") {
+    if (username === "" || confirmPassword === "" || password === "") {
         res.status(400).json("signup", {
             errorMessage:
                 "All fields are mandatory. Please provide your username, email and password.",
@@ -85,11 +89,11 @@ router.post("/signup", isLoggedOut, (req, res, next) => {
         return;
     }
 
-    if (password.length < 6) {
-        res.status(400).json("signup", {
-            errorMessage: "Your password needs to be at least 6 characters long.",
-        });
 
+
+    const passwordRegex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}/;
+    if (!passwordRegex.test(password)) {
+        res.status(400).json({ message: 'Password must have at least 6 characters and contain at least one number, one lowercase and one uppercase letter.' });
         return;
     }
 
@@ -99,24 +103,25 @@ router.post("/signup", isLoggedOut, (req, res, next) => {
         .then((hashedPassword) => {
 
             // Create a user and save it in the database
-            return User.create({ username, email, password: hashedPassword });
+            return User.create({ username, password: hashedPassword });
         })
         .then((user) => {
             res.redirect("/login");
         })
-        .catch((error) => {
-            if (error instanceof mongoose.Error.ValidationError) {
-                res.status(500).json("signup", { errorMessage: error.message });
-            } else if (error.code === 11000) {
-                res.status(500).json("signup", {
-                    errorMessage:
-                        "Username and email need to be unique. Provide a valid username or email.",
-                });
-            } else {
-                next(error);
-            }
-        });
-});
+        .then((createdUser) => {
+            const { name, _id } = createdUser;
+            const user = { name, _id };
+
+            // Send a json response containing the user object
+            res.status(201).json({ user: user });
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json({ message: "Internal Server Error" })
+        })
+    next(error);
+}
+);
 
 
 
