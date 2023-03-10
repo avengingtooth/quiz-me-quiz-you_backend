@@ -34,11 +34,4 @@ async function seed(){
     mongoose.connection.close();
 }
 
-
-// for (curQuestions of quiz.questions){
-//     questionObjIds.push(await Questions.create(curQuestions))
-// }
-// quiz.owner = await User.findOne({username: quiz.owner})
-// quiz.questions = questionObjIds
-// await Quiz.create(quiz)
 seed()
