@@ -13,10 +13,6 @@ const userSchema = new Schema(
       type: String,
       required: true
     },
-    confirmPassword: {
-      type: String,
-      required: true
-    }
   },
   {
     // this second object adds extra properties: `createdAt` and `updatedAt`    
