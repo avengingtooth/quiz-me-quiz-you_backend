@@ -22,10 +22,8 @@ router.post("/create", async (req, res, next) => {
 });
 
 router.get("/get", async (req, res, next) => {
-    console.log(req.body)
     let {startInd, count} = req.body
-    let quizzes = await Quiz.find().limit(count)
-    console.log(quizzes)
+    let quizzes = await Quiz.find().limit(count + startInd)
     res.json({quizzes: quizzes})
 })
 
