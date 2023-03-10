@@ -6,8 +6,7 @@ const quizSchema = new Schema(
         owner: {
             type: Schema.Types.ObjectId,
             ref: "User",
-            required: true,
-            unique: true
+            required: true
         },
         title: {
             type: String,
