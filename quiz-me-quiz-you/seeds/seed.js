@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-const MONGO_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/0-seeding-and-ajax'
+const MONGO_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/quiz-me-quiz-you'
 
 const users = require('./user.json')
 const quizzes = require('./quiz.json')
