@@ -1,73 +1,14 @@
 [
     {
-        "owner": "Bob",
-        "title": "How well do you know your French History?",
-        "description": "Find the year of the most famous battles",
-        "questions": [
-            {
-                "questionText": "In what year did the Battle of Marignan take place?",
-                "answers": 
-                [
-                    {
-                        "content": "1313",
-                        "points": 0
-                    },
-                    {
-                        "content": "1414",
-                        "points": 0
-                    },
-                    {
-                        "content": "1515",
-                        "points": 1
-                    },
-                    {
-                        "content": "1616",
-                        "points": 0
-                    }
-                ]
-            }   
-        ]
-    },
-    {
-        "owner": "Bob",
-        "title": "How well do you know your Friends?",
-        "description": "Friends characters' relationship",
-        "questions": []
-    },
-    {
-        "owner": "John",
-        "title": "How well do you know your Rolling Stones?",
-        "description": "Do you know the most famous rock'n'roll band",
-        "questions": []
-    },
-    {
-        "owner": "John",
-        "title": "How well do you know Hollywood golden age?",
-        "description": "Leading actors and actresses from 1930 until 1960",
-        "questions": []
-    },
-    {
-        "owner": "Marie",
-        "title": "How well do you know Italian Food?",
-        "description": "It's not just pizza and pasta!",
-        "questions": []
-    },
-    {
-        "owner": "Marie",
-        "title": "How well do you know Dragon Ball?",
-        "description": "From fun adventures to epic battles",
-        "questions": []
-    },
-    {
         "owner": "Julie",
-        "title": "How well do you know your Big Bang Theories?",
-        "description": "Well-known Scientists of well-known scientists",
+        "title": "How well do you know your fruits?",
+        "description": "Facts of healthy snacks",
         "questions": []
     },
     {
         "owner": "Julie",
         "title": "How well do you know your fruits?",
         "description": "Facts of healthy snacks",
-        "questions": []
+        "questions": []   
     }
 ]
