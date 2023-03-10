@@ -21,17 +21,23 @@ router.post("/create", async (req, res, next) => {
     }
 });
 
-router.get("/get", async (req, res, next) => {
-    let {startInd, count} = req.body
-    let quizzes = await Quiz.find().limit(count + startInd)
-    res.json({quizzes: quizzes})
+router.get('/getId/:quizId', async (req, res, next) => {   
+    let { quizId } = req.params
+    let quiz = await Quiz.findById(quizId).populate('questions')
+    res.json({quiz})
 })
 
-router.post('/:id/delete'), (req, res, next) => {
+router.get("/get/:count", async (req, res, next) => {
+    let { count } = req.params
+    let quizzes = await Quiz.find().limit(count)
+    console.log('many', quizzes[0])
+    res.json({quizzes: quizzes})
+})
+router.post('/delete'), (req, res, next) => {
     res.json('deleted')
 }
 
-router.post('/:id/edit'), (req, res, next) => {
+router.post('/edit'), (req, res, next) => {
     res.json('edit')
 }
 
