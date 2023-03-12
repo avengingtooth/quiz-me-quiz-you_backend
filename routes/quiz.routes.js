@@ -8,13 +8,15 @@ router.post("/create", async (req, res, next) => {
     try{
         let {quiz} = req.body
         let questionObjIds = []
-        for (curQuestions of quiz.questions){
+        for (let j = 0; j < quiz.questions.length; j++){
+            let curQuestions = quiz.questions[j]
             questionObjIds.push(await Question.create(curQuestions))
         }
         quiz.owner = await User.findOne({username: quiz.owner})
         quiz.questions = questionObjIds
-        await Quiz.create(quiz)
-        res.json("create")
+
+        let createdQuizId = (await Quiz.create(quiz))._id
+        res.json({createdId: createdQuizId})
     }
     catch (error){
         next(error)
