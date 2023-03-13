@@ -15,8 +15,6 @@ const app = express();
 require("./config")(app);
 
 // 👇 Start handling routes here
-const indexRoutes = require("./routes/index.routes");
-app.use("/", indexRoutes);
 
 // const authRoutes = require('./routes/authentication.routes')
 // app.use('/auth', authRoutes)
@@ -29,8 +27,5 @@ app.use('/multiplayer', multiplayerRoutes)
 
 // ❗ To handle errors. Routes that don't exist or errors that you handle in specific routes
 require("./error-handling")(app);
-
-// app.js 
-// ... previous imports stay unchanged
 
 module.exports = app;
