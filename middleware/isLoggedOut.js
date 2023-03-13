@@ -15,3 +15,5 @@ export const isLoggedOut = () => {
     return true;
   }
 };
+
+module.exports = isLoggedOut
