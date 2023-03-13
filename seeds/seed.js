@@ -1,10 +1,10 @@
 const mongoose = require("../db");
 
-const Quiz = require('../models/Quiz-model')
-const Question = require('../models/Question-model')
+const Quiz = require('../models/Quiz.model')
+const Question = require('../models/Question.model')
 const User = require('../models/User.model')
 
-async function seed(){
+async function seed() {
     const users = require('./user.json')
     const quizzes = require('./quiz.json')
 
@@ -15,14 +15,14 @@ async function seed(){
         Question.deleteMany(),
     ])
 
-    for(let i = 0; i < users.length; i++){
+    for (let i = 0; i < users.length; i++) {
         userObjIds[users[i].username] = await User.create(users[i])
     }
 
-    for (let i = 0; i < quizzes.length; i++){
+    for (let i = 0; i < quizzes.length; i++) {
         let quiz = quizzes[i]
         let questionObjIds = []
-        for (let j = 0; j < quiz.questions.length; j++){
+        for (let j = 0; j < quiz.questions.length; j++) {
             questionObjIds.push(await Question.create(quiz.questions[j]))
         }
         quiz.owner = userObjIds[quiz.owner]
