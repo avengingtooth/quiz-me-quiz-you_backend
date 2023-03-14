@@ -49,6 +49,7 @@ server.on("connection", (socket) => {
             state: 'await-start'
         }
 
+        socket.join(`${gameId}`)
         socket.emit('code', gameId)
     })
 
@@ -62,19 +63,17 @@ server.on("connection", (socket) => {
             let room = rooms[gameId]
 
             if (!room.playerIds.length){
-                socket.to(`${gameId}`).emit('error', 'no-players')
+                socket.emit('error', 'no-players')
+                socket.emit('gameState', 'error')
             }
             else{
                 room.scores = updateScores(room.playerIds, room.curAnswers, room.curSolutions, room.scores)
                 socket.emit('scores', {scores: room.scores, players: room.playerIds})
-                socket.to(`${gameId}`).emit('scores', {scores: room.scores, players: room.playerIds})
+                server.to(`${gameId}`).emit('scores', {scores: room.scores, players: room.playerIds})
 
                 if  (!room.quiz.questions.length){
-                    if (room.state !== 'game-over'){
-                        console.log('first time')
-                        room.state = 'game-over'
-                    }
-                    socket.to(`${gameId}`).emit('gameState', 'game-over')
+                    room.state = 'game-over'
+                    server.to(`${gameId}`).emit('gameState', 'game-over')
                 }
                 else{
                     let curQuestion = room.quiz.questions.pop(0)
@@ -83,14 +82,20 @@ server.on("connection", (socket) => {
                         points.push(ans.points)
                     })
                     room.curSolutions = points
-                    socket.to(`${gameId}`).emit('question', curQuestion)
-                    socket.to(`${gameId}`).emit('gameState', 'playing')
+                    server.to(`${gameId}`).emit('question', curQuestion)
+                    server.to(`${gameId}`).emit('gameState', 'playing')
                 }
             }
         }
         else{
             socket.emit('error', "Your lobby wasn't created go to /multiplayer/join and try again")
         }
+    })
+
+    socket.on('start', data => {
+        let {hostSocket, gameId} = data
+        hostSocket.join(`${gameId}`)
+        server.to(`${gameId}`).emit('gameState', 'playing')
     })
 
     // players code
@@ -112,26 +117,24 @@ server.on("connection", (socket) => {
                 })
 
                 if (uniqueUsername){
-                    rooms[gameId]['scores'][socket.id] = {username, score: 0}
-                    rooms[gameId]['curAnswers'][socket.id] = -1
-                    rooms[gameId]['playerIds'].push(socket.id)
-                    rooms[gameId].host.emit('player-joined', username)
+                    let room = rooms[gameId]
+                    room['scores'][socket.id] = {username, score: 0}
+                    room['curAnswers'][socket.id] = -1
+                    room['playerIds'].push(socket.id)
                     playerGame[socket.id] = gameId
                     socket.join(`${gameId}`)
-                    socket.emit('gameState', 'await-start')
+                    server.to(`${gameId}`).emit('gameState', room.state)
+                    server.to(`${gameId}`).emit('scores', {scores: room.scores, players: room.playerIds})
                 }
                 else{
-                    socket.emit('gameState', 'error')
-                    socket.emit('error', 'Username already in use')
+                    socket.emit('error', `Username ${username} is already in use`)
                 }
             }
             else{
-                socket.emit('gameState', 'error')
-                socket.emit('error', 'Incorrect room pin')
+                socket.emit('error', `Game with id ${gameId} does not exist`)
             }
         }
         catch(error){
-            console.log(error)
             socket.emit('error', error)
         }
     })
@@ -146,6 +149,7 @@ server.on("connection", (socket) => {
 
     socket.on("disconnect", (reason) => {
         if (hosts[socket.id]){
+            server.to(`${hosts[socket.id]}`).emit('error', 'Host disconnected')
             delete rooms[hosts[socket.id]]
             delete hosts[socket.id]
         }
@@ -156,7 +160,6 @@ server.on("connection", (socket) => {
                 delete room['curAnswers'][socket.id]
                 let ind = room['playerIds'].indexOf(socket.id)
                 room['playerIds'].splice(ind, 1)
-                room.host.emit('player-disconnected', ind)
             }
         }
     })
