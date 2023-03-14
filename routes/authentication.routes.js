@@ -1,24 +1,18 @@
 const express = require("express")
 const router = require("express").Router();
-
 const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
-
 const User = require("../models/User.model");
+const isAuthenticated = require("../middleware/isAuthenticated");
 
-const isLoggedOut = require("../middleware/isLoggedOut");
-const isLoggedIn = require("../middleware/isLoggedIn");
+const jsonWebToken = require("jsonwebtoken")
 
-
-router.get("/login", isLoggedOut, (req, res) => {
-  res.json("login");
-});
 router.post("/login", (req, res, next) => {
   const { username, password } = req.body;
 
   // Check that username, email, and password are provided
   if (username === "" || password === "") {
-    res.status(400).json("login", {
+    res.status(400).json({
       errorMessage:
         "All fields are mandatory. Please provide username and password.",
     });
@@ -33,7 +27,7 @@ router.post("/login", (req, res, next) => {
       if (!user) {
         res
           .status(400)
-          .json("login", { errorMessage: "Wrong credentials." });
+          .json({ errorMessage: "Wrong credentials." });
         return;
       }
 
@@ -44,16 +38,21 @@ router.post("/login", (req, res, next) => {
           if (!isSamePassword) {
             res
               .status(400)
-              .json("login", { errorMessage: "Wrong credentials." });
+              .json({ errorMessage: "Wrong credentials." });
             return;
           }
 
-          // Add the user object to the session object
-          req.session.currentUser = user.toObject();
-          // Remove the password field
-          delete req.session.currentUser.password;
-
-          res.redirect("/quiz/all");
+          const token = jsonWebToken.sign(
+            { id: user._id },
+            process.env.TOKEN_SECRET,
+            {
+              algorithm: 'HS256',
+              expiresIn: '1d',
+            }
+          )
+          res.json({authToken: token})
+          // req.session.currentUser = user.toObject();
+          // delete req.session.currentUser.password;
         })
         .catch((err) => next(err)); // In this case, we send error handling to the error handling middleware.
     })
@@ -61,22 +60,20 @@ router.post("/login", (req, res, next) => {
 });
 
 
-
-router.get("/signup", isLoggedOut, (req, res) => {
-  res.json("signup");
-});
-router.post("/signup", isLoggedOut, (req, res, next) => {
+router.post("/signup", (req, res, next) => {
   const { username, password } = req.body;
 
   // Check that username, email, and password are provided
   if (username === "" || password === "") {
-    res.status(400).json("signup", {
+    res.status(400).json({
       errorMessage:
         "All fields are mandatory. Please provide your username, email and password.",
     });
 
     return;
   }
+
+  const saltRounds = 10
 
   bcrypt
     .genSalt(saltRounds)
@@ -87,13 +84,13 @@ router.post("/signup", isLoggedOut, (req, res, next) => {
       return User.create({ username, password: hashedPassword });
     })
     .then((user) => {
-      res.redirect("/login");
+      res.status(201).json({ message: "User Created" });
     })
     .catch((error) => {
       if (error instanceof mongoose.Error.ValidationError) {
-        res.status(500).json("signup", { errorMessage: error.message });
+        res.status(500).json({ errorMessage: error.message });
       } else if (error.code === 11000) {
-        res.status(500).json("signup", {
+        res.status(500).json({
           errorMessage:
             "Username need to be unique. Provide a valid username",
         });
@@ -103,19 +100,8 @@ router.post("/signup", isLoggedOut, (req, res, next) => {
     });
 });
 
-
-
-router.post("/logout", (req, res, next) => {
-  req.session.destroy((err) => {
-    if (err) {
-      res.status(500).json("logout", { errorMessage: err.message });
-      return;
-    }
-
-    res.redirect("/");
-  });
-});
-
-
+router.get("/verify", isAuthenticated, async (req, res, next) => {
+  res.json(req.user)
+})
 
 module.exports = router;
