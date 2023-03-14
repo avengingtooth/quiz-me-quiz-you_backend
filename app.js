@@ -18,8 +18,8 @@ require("./config")(app);
 const indexRoutes = require("./routes/index.routes");
 app.use("/", indexRoutes);
 
-// const authRoutes = require('./routes/authentication.routes')
-// app.use('/auth', authRoutes)
+const authRoutes = require('./routes/authentication.routes')
+app.use('/auth', authRoutes)
 
 const quizRoutes = require('./routes/quiz.routes')
 app.use('/quiz', quizRoutes)
