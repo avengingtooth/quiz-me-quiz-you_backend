@@ -25,6 +25,14 @@ function updateScores(playerIds, curAnswers, curSolutions, scores){
     return scores
 }
 
+function randomId(){
+    let id = ''
+    for (let i = 0; i < 5; i++){
+        id += `${Math.round(Math.random()*10)}`
+    }
+    return id
+}
+
 // whenever a user connectes to the server the server listens for the emits with the names in socket.on()
 // once the socket disconnects it goes into .on("disconnect")
 server.on("connection", (socket) => {
@@ -37,7 +45,11 @@ server.on("connection", (socket) => {
         // the room id is set and the host is linked to the gameId in hosts by its socket.id
         // the gameId is sent back to the host so the host can display it
         let { quiz } = data
-        let gameId = Math.round(Math.random()*5000)
+        let gameId = -1
+        while (Number(gameId) <= 0 || rooms[gameId] !== undefined){
+            gameId = String(randomId())
+        }
+
         hosts[socket.id] = gameId
         rooms[gameId] = {
             host: socket,
@@ -49,7 +61,7 @@ server.on("connection", (socket) => {
             state: 'await-start'
         }
 
-        socket.join(`${gameId}`)
+        socket.join(gameId)
         socket.emit('code', gameId)
     })
 
@@ -69,11 +81,11 @@ server.on("connection", (socket) => {
             else{
                 room.scores = updateScores(room.playerIds, room.curAnswers, room.curSolutions, room.scores)
                 socket.emit('scores', {scores: room.scores, players: room.playerIds})
-                server.to(`${gameId}`).emit('scores', {scores: room.scores, players: room.playerIds})
+                server.to(gameId).emit('scores', {scores: room.scores, players: room.playerIds})
 
                 if  (!room.quiz.questions.length){
                     room.state = 'game-over'
-                    server.to(`${gameId}`).emit('gameState', 'game-over')
+                    server.to(gameId).emit('gameState', 'game-over')
                 }
                 else{
                     let curQuestion = room.quiz.questions.pop(0)
@@ -82,8 +94,8 @@ server.on("connection", (socket) => {
                         points.push(ans.points)
                     })
                     room.curSolutions = points
-                    server.to(`${gameId}`).emit('question', curQuestion)
-                    server.to(`${gameId}`).emit('gameState', 'playing')
+                    server.to(gameId).emit('question', curQuestion)
+                    server.to(gameId).emit('gameState', 'playing')
                 }
             }
         }
@@ -94,8 +106,8 @@ server.on("connection", (socket) => {
 
     socket.on('start', data => {
         let {hostSocket, gameId} = data
-        hostSocket.join(`${gameId}`)
-        server.to(`${gameId}`).emit('gameState', 'playing')
+        hostSocket.join(gameId)
+        server.to(gameId).emit('gameState', 'playing')
     })
 
     // players code
@@ -122,9 +134,9 @@ server.on("connection", (socket) => {
                     room['curAnswers'][socket.id] = -1
                     room['playerIds'].push(socket.id)
                     playerGame[socket.id] = gameId
-                    socket.join(`${gameId}`)
-                    server.to(`${gameId}`).emit('gameState', room.state)
-                    server.to(`${gameId}`).emit('scores', {scores: room.scores, players: room.playerIds})
+                    socket.join(gameId)
+                    server.to(gameId).emit('gameState', room.state)
+                    server.to(gameId).emit('scores', {scores: room.scores, players: room.playerIds})
                 }
                 else{
                     socket.emit('error', `Username ${username} is already in use`)
