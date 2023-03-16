@@ -30,7 +30,7 @@ function updateScores(playerIds, curAnswers, curSolutions, scores){
 function randomId(){
     let id = ''
     for (let i = 0; i < 5; i++){
-        id += `${Math.round(Math.random()*10)}`
+        id += `${Math.round(Math.random()*9)}`
     }
     return id
 }

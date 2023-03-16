@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const isAuthenticated = require('../middleware/isAuthenticated')
 
 const Quiz = require('../models/Quiz-model')
 const Question = require('../models/Question-model')
@@ -33,7 +34,7 @@ async function createQuestions(newQuestionContent){
 }
 
 // #TODO needs to be logged in
-router.post("/create", async (req, res, next) => {
+router.post("/create", isAuthenticated, async (req, res, next) => {
     // creates a new quiz
     // creates all the questions
     // sets the owner to the id of the owner
@@ -44,7 +45,7 @@ router.post("/create", async (req, res, next) => {
     try{
         let {quiz} = req.body
 
-        quiz.owner = await User.findOne({username: quiz.owner})
+        quiz.owner = req.user._id
 
         let questionObjIds = await createQuestions(quiz.questions)
         quiz.questions = questionObjIds
@@ -58,7 +59,7 @@ router.post("/create", async (req, res, next) => {
 });
 
 // #TODO needs to be owner
-router.post('/edit', async (req, res, next) => {
+router.patch('/edit', async (req, res, next) => {
     // edits a quiz
     // gets all the quiz data
     // deletes all previously existing questions
@@ -104,11 +105,7 @@ router.get("/getMultiple/:count/:offset/:query", async (req, res, next) => {
                 $regex: query,
                 $options: 'i'
             }
-        })
-        // .skip(offset).limit(count)
-        if (quizzes.length > offset){
-            quizzes = quizzes.splice(offset, count)
-        }
+        }).skip(offset).limit(count)
         res.json({quizzes: quizzes})
     }
     catch(error){

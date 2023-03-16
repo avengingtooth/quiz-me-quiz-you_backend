@@ -16,8 +16,8 @@ require("./config")(app);
 
 // 👇 Start handling routes here
 
-// const authRoutes = require('./routes/authentication.routes')
-// app.use('/auth', authRoutes)
+const authRoutes = require('./routes/authentication.routes')
+app.use('/auth', authRoutes)
 
 const quizRoutes = require('./routes/quiz.routes')
 app.use('/quiz', quizRoutes)
