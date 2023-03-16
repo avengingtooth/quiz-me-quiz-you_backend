@@ -10,7 +10,7 @@ const questionSchema = new Schema(
         answers: [
             {
                 content: {
-                    type: String, 
+                    type: String,
                     required: true
                 },
                 points: {
