@@ -1,13 +1,13 @@
 const router = require("express").Router();
 const isAuthenticated = require('../middleware/isAuthenticated')
 
-const Quiz = require('../models/Quiz-model')
-const Question = require('../models/Question-model')
+const Quiz = require('../models/Quiz.model')
+const Question = require('../models/Question.model')
 const User = require('../models/User.model')
 
 // quiz crud routes
 
-async function deleteQuestions(quiz){
+async function deleteQuestions(quiz) {
     // iterates through each question id in quiz
     // deletes the questions by that id
     quiz.questions.map(async (question) => {
@@ -15,13 +15,13 @@ async function deleteQuestions(quiz){
     })
 }
 
-async function createQuestions(newQuestionContent){
+async function createQuestions(newQuestionContent) {
     // iterates through an array of new question information
     // creates a new question
     // saves the question's id in an array
     // returns all the question ids
     let questionObjIds = []
-    for (let j = 0; j < newQuestionContent.length; j++){
+    for (let j = 0; j < newQuestionContent.length; j++) {
         let question = newQuestionContent[j]
         question = {
             title: question.title,
@@ -42,8 +42,8 @@ router.post("/create", isAuthenticated, async (req, res, next) => {
     // create a new quiz with the data of the new quiz
     // returns the quiz id
 
-    try{
-        let {quiz} = req.body
+    try {
+        let { quiz } = req.body
 
         quiz.owner = req.user._id
 
@@ -51,9 +51,9 @@ router.post("/create", isAuthenticated, async (req, res, next) => {
         quiz.questions = questionObjIds
 
         let createdQuizId = (await Quiz.create(quiz))._id
-        res.json({createdId: createdQuizId})
+        res.json({ createdId: createdQuizId })
     }
-    catch (error){
+    catch (error) {
         next('quiz creation failed')
     }
 });
@@ -68,16 +68,16 @@ router.patch('/edit', async (req, res, next) => {
 
     let { updatedQuiz, quizId } = req.body
     let originalQuiz = await Quiz.findById(quizId)
-    if (originalQuiz){
+    if (originalQuiz) {
         updatedQuiz.owner = originalQuiz.owner
         deleteQuestions(originalQuiz)
         let questionObjIds = await createQuestions(updatedQuiz.questions)
         updatedQuiz.questions = questionObjIds
-        
-        await Quiz.findOneAndUpdate({_id: quizId}, updatedQuiz)
+
+        await Quiz.findOneAndUpdate({ _id: quizId }, updatedQuiz)
         res.json('edit')
     }
-    else{
+    else {
         console.log('quiz not found')
     }
 })
@@ -97,7 +97,7 @@ router.post('/delete', async (req, res, next) => {
 // fetching quiz data
 
 router.get("/getMultiple/:count/:offset/:query", async (req, res, next) => {
-    try{
+    try {
         // gets count number of quizzes max and filters for all quizzes with a title containing the query text
         let { count, query, offset } = req.params
         let quizzes = await Quiz.find({
@@ -106,9 +106,9 @@ router.get("/getMultiple/:count/:offset/:query", async (req, res, next) => {
                 $options: 'i'
             }
         }).skip(offset).limit(count)
-        res.json({quizzes: quizzes})
+        res.json({ quizzes: quizzes })
     }
-    catch(error){
+    catch (error) {
         console.log('find failed get multiple')
     }
 })
@@ -118,54 +118,54 @@ router.get("/getMultiple/:count/:offset/:query", async (req, res, next) => {
 router.get(`/getQuizWithPoints/:quizId`, async (req, res, next) => {
     // fetches quiz by id and populates questions
     // different from getById as the points are also sent to the client
-    try{
+    try {
         let { quizId } = req.params
         let quiz = await Quiz.findById(quizId).populate('questions')
-        res.json({quiz})
+        res.json({ quiz })
     }
-    catch(error){
+    catch (error) {
         console.log('find failed quiz by id')
     }
 })
 
-router.get('/getById/:quizId', async (req, res, next) => {   
+router.get('/getById/:quizId', async (req, res, next) => {
     // fetches quiz by id and populates questions
     // filters out the points for each question 
-    try{
+    try {
         let { quizId } = req.params
-        let quiz = await Quiz.findById(quizId).populate('questions', {'questionText': 1, 'answers': {'content': 1}})
-        res.json({quiz})
+        let quiz = await Quiz.findById(quizId).populate('questions', { 'questionText': 1, 'answers': { 'content': 1 } })
+        res.json({ quiz })
     }
-    catch(error){
+    catch (error) {
         console.log('find failed quiz by id')
     }
 })
 
-router.post('/getScore', async(req, res, next) => {
-    try{
+router.post('/getScore', async (req, res, next) => {
+    try {
         let { id, answers } = req.body
         let total = 0
         let max = 0
-        let questions = (await Quiz.find({_id: id}, {questions: 1}).populate('questions'))[0].questions
-        for (let i=0; i < answers.length; i++){
+        let questions = (await Quiz.find({ _id: id }, { questions: 1 }).populate('questions'))[0].questions
+        for (let i = 0; i < answers.length; i++) {
             let curAnswerInd = answers[i]
             let curQuestion = questions[i]
             let curMax = 0
-            if (typeof curAnswerInd === 'number'){
+            if (typeof curAnswerInd === 'number') {
                 let curAnswerValue = curQuestion['answers'][curAnswerInd]['points']
                 total += curAnswerValue
             }
-            for (currentAnsIteration of curQuestion['answers']){
+            for (currentAnsIteration of curQuestion['answers']) {
                 let answerPoints = currentAnsIteration.points
-                if (curMax < answerPoints){
+                if (curMax < answerPoints) {
                     curMax = answerPoints
                 }
             }
             max += curMax
         }
-        res.json({total, max})
+        res.json({ total, max })
     }
-    catch(error){
+    catch (error) {
         console.log("error")
     }
 })
