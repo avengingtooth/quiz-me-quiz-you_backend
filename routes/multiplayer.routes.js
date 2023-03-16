@@ -21,6 +21,8 @@ function updateScores(playerIds, curAnswers, curSolutions, scores){
         if (playerAnswer >= 0){
             scores[player]['score'] += curSolutions[playerAnswer]
         }
+        scores[player]['allAnswers'].push(playerAnswer)
+        console.log({allAnswers: scores[player]['allAnswers']})
     })
     return scores
 }
@@ -76,18 +78,22 @@ server.on("connection", (socket) => {
 
             if (!room.playerIds.length){
                 socket.emit('error', 'no-players')
+                room.state = 'await-start'
                 socket.emit('gameState', 'error')
             }
             else{
-                room.scores = updateScores(room.playerIds, room.curAnswers, room.curSolutions, room.scores)
-                socket.emit('scores', {scores: room.scores, players: room.playerIds})
+                if (room.state !== 'await-start'){
+                    room.scores = updateScores(room.playerIds, room.curAnswers, room.curSolutions, room.scores)
+                    socket.emit('scores', {scores: room.scores, players: room.playerIds})
+                }
                 server.to(gameId).emit('scores', {scores: room.scores, players: room.playerIds})
-
                 if  (!room.quiz.questions.length){
                     room.state = 'game-over'
-                    server.to(gameId).emit('gameState', 'game-over')
+                    server.to(gameId).emit('gameState', room.state)
                 }
                 else{
+                    room.state = 'playing'
+                    console.log(room.state)
                     let curQuestion = room.quiz.questions.pop(0)
                     let points = []
                     curQuestion.answers.forEach(ans => {
@@ -95,7 +101,7 @@ server.on("connection", (socket) => {
                     })
                     room.curSolutions = points
                     server.to(gameId).emit('question', curQuestion)
-                    server.to(gameId).emit('gameState', 'playing')
+                    server.to(gameId).emit('gameState', room.state)
                 }
             }
         }
@@ -130,7 +136,7 @@ server.on("connection", (socket) => {
 
                 if (uniqueUsername){
                     let room = rooms[gameId]
-                    room['scores'][socket.id] = {username, score: 0}
+                    room['scores'][socket.id] = {username, score: 0, allAnswers:[]}
                     room['curAnswers'][socket.id] = -1
                     room['playerIds'].push(socket.id)
                     playerGame[socket.id] = gameId
