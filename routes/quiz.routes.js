@@ -33,7 +33,6 @@ async function createQuestions(newQuestionContent) {
     return questionObjIds
 }
 
-// #TODO needs to be logged in
 router.post("/create", isAuthenticated, async (req, res, next) => {
     // creates a new quiz
     // creates all the questions
